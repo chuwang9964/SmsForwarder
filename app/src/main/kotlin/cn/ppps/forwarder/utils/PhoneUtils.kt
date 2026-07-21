@@ -54,6 +54,16 @@ class PhoneUtils private constructor() {
         else
             -1
 
+        /**
+         * 从 SIM 备注中提取 11 位手机号
+         * 例如："中国移动_13660486937" -> "13660486937"
+         *       "SIM1_中国移动_13660486937" -> "13660486937"
+         */
+        fun extractPhoneNumber(simRemark: String?): String {
+            if (simRemark.isNullOrEmpty()) return ""
+            return Regex("""\d{11}""").find(simRemark)?.value ?: ""
+        }
+
         //获取多卡信息
         @SuppressLint("Range")
         fun getSimMultiInfo(): MutableMap<Int, SimInfo> {

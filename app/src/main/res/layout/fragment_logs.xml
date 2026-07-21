@@ -19,6 +19,42 @@
         app:indicator_textSize="@dimen/text_size_medium"
         app:indicator_width="0dp" />
 
+    <LinearLayout
+        android:id="@+id/layout_sim_phones"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/xui_config_color_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/tv_sim1_phone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/xui_config_color_title_text"
+            android:textSize="@dimen/text_size_small" />
+
+        <View
+            android:id="@+id/view_sim_divider"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="@color/gray_text_light" />
+
+        <TextView
+            android:id="@+id/tv_sim2_phone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/xui_config_color_title_text"
+            android:textSize="@dimen/text_size_small" />
+    </LinearLayout>
+
     <com.scwang.smartrefresh.layout.SmartRefreshLayout
         android:id="@+id/refreshLayout"
         android:layout_width="match_parent"

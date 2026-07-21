@@ -25,7 +25,9 @@ import cn.ppps.forwarder.database.viewmodel.BaseViewModelFactory
 import cn.ppps.forwarder.database.viewmodel.MsgViewModel
 import cn.ppps.forwarder.databinding.FragmentLogsBinding
 import cn.ppps.forwarder.utils.Log
+import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.SendUtils
+import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.XToastUtils
 import com.scwang.smartrefresh.layout.api.RefreshLayout
 import com.xuexiang.xaop.annotation.SingleClick
@@ -132,6 +134,12 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
             initLogsFilterDialog(true)
             reloadData()
         }
+        refreshSimPhones()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshSimPhones()
     }
 
     override fun initListeners() {
@@ -213,6 +221,22 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
         viewModel.setType(currentType).setFilter(currentFilter)
         adapter.refresh()
         binding!!.recyclerView.scrollToPosition(0)
+    }
+
+    /**
+     * 刷新顶部 SIM 手机号显示
+     * 从设置页的 SIM 备注中提取 11 位手机号
+     */
+    @SuppressLint("SetTextI18n")
+    private fun refreshSimPhones() {
+        val sim1Phone = PhoneUtils.extractPhoneNumber(SettingUtils.extraSim1)
+        val sim2Phone = PhoneUtils.extractPhoneNumber(SettingUtils.extraSim2)
+        binding!!.tvSim1Phone.text = "SIM1：${if (sim1Phone.isEmpty()) "未设置" else sim1Phone}"
+        binding!!.tvSim2Phone.text = "SIM2：${if (sim2Phone.isEmpty()) "未设置" else sim2Phone}"
+        // 单卡设备时不显示 SIM2 及分隔线
+        val isSingleSim = PhoneUtils.getSimSlotCount() == 1
+        binding!!.tvSim2Phone.visibility = if (isSingleSim) View.GONE else View.VISIBLE
+        binding!!.viewSimDivider.visibility = if (isSingleSim) View.GONE else View.VISIBLE
     }
 
     @Suppress("SameParameterValue")

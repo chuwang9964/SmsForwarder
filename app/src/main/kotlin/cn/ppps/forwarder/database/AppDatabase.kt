@@ -21,9 +21,12 @@ import cn.ppps.forwarder.database.entity.Rule
 import cn.ppps.forwarder.database.entity.Sender
 import cn.ppps.forwarder.database.entity.Task
 import cn.ppps.forwarder.database.ext.ConvertersDate
+import cn.ppps.forwarder.entity.setting.WebhookSetting
 import cn.ppps.forwarder.utils.DATABASE_NAME
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.TAG_LIST
+import cn.ppps.forwarder.utils.TYPE_WEBHOOK
+import com.google.gson.Gson
 
 @Database(
     entities = [Frpc::class, Msg::class, Logs::class, Rule::class, Sender::class, Task::class],
@@ -89,6 +92,21 @@ local_port = 5000
 custom_domains = smsf.demo.com
 ', 0, '1651334400000')
 """.trimIndent()
+                        )
+                        // 默认创建短信系统 Webhook 发送通道
+                        val defaultHeaders = mapOf("Content-Type" to "application/json")
+                        val defaultSetting = WebhookSetting(
+                            method = "POST",
+                            webServer = "https://foreignapi.dev.yxho.com/bizSystem/api/sms/send",
+                            secret = "",
+                            response = "",
+                            webParams = """[{"ReceptionPhone":"{{CARD_SLOT###^.*?(\d{11})$===$1}}","SendPhone":"{{FROM}}","ReceptionTime":"{{RECEIVE_TIME}}","SMSContent":"{{SMS}}"}]""",
+                            headers = defaultHeaders
+                        )
+                        val jsonSetting = Gson().toJson(defaultSetting)
+                        db.execSQL(
+                            "INSERT INTO \"Sender\" (type, name, json_setting, status, time) VALUES (?, ?, ?, ?, ?)",
+                            arrayOf(TYPE_WEBHOOK, "ticket", jsonSetting, 1, System.currentTimeMillis())
                         )
                     }
                 }).addMigrations(
