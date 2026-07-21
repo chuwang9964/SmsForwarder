@@ -35,7 +35,6 @@ import cn.ppps.forwarder.core.webview.AgentWebFragment
 import cn.ppps.forwarder.entity.ImageInfo
 import cn.ppps.forwarder.fragment.MarkdownFragment
 import cn.ppps.forwarder.fragment.ServiceProtocolFragment
-import cn.ppps.forwarder.service.NotificationService
 import com.xuexiang.xpage.base.XPageFragment
 import com.xuexiang.xpage.core.PageOption
 import com.xuexiang.xui.utils.ColorUtils
@@ -295,16 +294,6 @@ class CommonUtils private constructor() {
             return packageNames.contains(context.packageName)
         }
 
-        //开关通知监听服务
-        fun toggleNotificationListenerService(context: Context) {
-            val pm = context.packageManager
-            pm.setComponentEnabledSetting(
-                ComponentName(context.applicationContext, NotificationService::class.java), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP
-            )
-            pm.setComponentEnabledSetting(
-                ComponentName(context.applicationContext, NotificationService::class.java), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP
-            )
-        }
 
         //获取本机IP地址
         fun getIPAddresses(): List<String> {

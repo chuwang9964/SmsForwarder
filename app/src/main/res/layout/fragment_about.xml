@@ -155,10 +155,6 @@
 
             </com.xuexiang.xui.widget.textview.supertextview.SuperTextView>
 
-            <com.xuexiang.xui.widget.textview.supertextview.SuperTextView
-                android:id="@+id/menu_wechat_miniprogram"
-                style="@style/InfoItem.About"
-                app:sLeftTextString="@string/about_item_wechat_miniprogram" />
 
             <com.xuexiang.xui.widget.textview.supertextview.SuperTextView
                 style="@style/InfoItem.AboutWithBtn"
@@ -199,10 +195,6 @@
 
             </com.xuexiang.xui.widget.textview.supertextview.SuperTextView>
 
-            <com.xuexiang.xui.widget.textview.supertextview.SuperTextView
-                android:id="@+id/menu_donation"
-                style="@style/InfoItem.About"
-                app:sLeftTextString="@string/about_item_donation_link" />
 
             <com.xuexiang.xui.widget.textview.supertextview.SuperTextView
                 android:id="@+id/menu_user_protocol"

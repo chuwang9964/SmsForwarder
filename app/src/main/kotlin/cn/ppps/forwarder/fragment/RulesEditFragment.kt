@@ -73,7 +73,6 @@ import cn.ppps.forwarder.utils.SendUtils
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.SharedPreference
 import cn.ppps.forwarder.utils.XToastUtils
-import cn.ppps.forwarder.workers.LoadAppListWorker
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
@@ -495,8 +494,6 @@ class RulesEditFragment : BaseFragment<FragmentRulesEditBinding?>(), View.OnClic
 
         if (App.UserAppList.isEmpty() && App.SystemAppList.isEmpty()) {
             XToastUtils.info(getString(R.string.loading_app_list))
-            val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-            WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             return
         }
 

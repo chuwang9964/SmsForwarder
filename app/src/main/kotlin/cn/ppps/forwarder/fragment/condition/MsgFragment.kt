@@ -9,8 +9,6 @@ import android.widget.EditText
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.lifecycle.Observer
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.google.gson.Gson
 import cn.ppps.forwarder.App
 import cn.ppps.forwarder.App.Companion.CALL_TYPE_MAP
@@ -48,11 +46,9 @@ import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.STATUS_ON
 import cn.ppps.forwarder.utils.SettingUtils
-import cn.ppps.forwarder.utils.TASK_CONDITION_APP
 import cn.ppps.forwarder.utils.TASK_CONDITION_CALL
 import cn.ppps.forwarder.utils.TASK_CONDITION_SMS
 import cn.ppps.forwarder.utils.XToastUtils
-import cn.ppps.forwarder.workers.LoadAppListWorker
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
@@ -63,7 +59,6 @@ import com.xuexiang.xui.widget.actionbar.TitleBar
 import com.xuexiang.xui.widget.dialog.materialdialog.DialogAction
 import com.xuexiang.xui.widget.dialog.materialdialog.MaterialDialog
 import com.xuexiang.xui.widget.spinner.materialspinner.MaterialSpinner
-import com.xuexiang.xutil.XUtil
 import com.xuexiang.xutil.resource.ResUtils.getColors
 import java.util.Date
 
@@ -115,21 +110,6 @@ class MsgFragment : BaseFragment<FragmentTasksConditionMsgBinding?>(), View.OnCl
      */
     override fun initViews() {
         when (ruleType) {
-            "app" -> {
-                resultCode = TASK_CONDITION_APP
-                titleBar?.setTitle(R.string.task_app)
-                binding!!.ivTaskApp.visibility = View.VISIBLE
-                binding!!.layoutSimSlot.visibility = View.GONE
-                binding!!.rbPhone.visibility = View.GONE
-                binding!!.rbCallType.visibility = View.GONE
-                binding!!.rbContent.visibility = View.GONE
-                binding!!.tvMuRuleTips.setText(R.string.mu_rule_app_tips)
-                //初始化APP下拉列表
-                initAppSpinner()
-                //监听已安装App信息列表加载完成事件
-                LiveEventBus.get(EVENT_LOAD_APP_LIST, String::class.java).observeStickyForever(appListObserver)
-            }
-
             "call" -> {
                 resultCode = TASK_CONDITION_CALL
                 titleBar?.setTitle(R.string.task_call)
@@ -287,8 +267,6 @@ class MsgFragment : BaseFragment<FragmentTasksConditionMsgBinding?>(), View.OnCl
 
         if (App.UserAppList.isEmpty() && App.SystemAppList.isEmpty()) {
             XToastUtils.info(getString(R.string.loading_app_list))
-            val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-            WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             return
         }
 

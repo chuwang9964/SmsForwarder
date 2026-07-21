@@ -22,7 +22,6 @@ import cn.ppps.forwarder.utils.HistoryUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.SendUtils
 import cn.ppps.forwarder.utils.SettingUtils
-import cn.ppps.forwarder.utils.TASK_CONDITION_APP
 import cn.ppps.forwarder.utils.TASK_CONDITION_CALL
 import cn.ppps.forwarder.utils.TASK_CONDITION_SMS
 import cn.ppps.forwarder.utils.TaskWorker
@@ -122,7 +121,6 @@ class SendWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 
     private fun autoTaskProcess(msgInfo: MsgInfo, msgInfoJson: String, simSlot: String) {
         val conditionType = when (msgInfo.type) {
-            "app" -> TASK_CONDITION_APP
             "call" -> TASK_CONDITION_CALL
             else -> TASK_CONDITION_SMS
         }

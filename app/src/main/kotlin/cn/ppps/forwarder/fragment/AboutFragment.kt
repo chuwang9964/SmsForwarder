@@ -1,9 +1,7 @@
 package cn.ppps.forwarder.fragment
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import cn.ppps.forwarder.App
 import cn.ppps.forwarder.BuildConfig
 import cn.ppps.forwarder.R
 import cn.ppps.forwarder.core.BaseFragment
@@ -12,23 +10,13 @@ import cn.ppps.forwarder.databinding.FragmentAboutBinding
 import cn.ppps.forwarder.utils.AppUtils
 import cn.ppps.forwarder.utils.CacheUtils
 import cn.ppps.forwarder.utils.CommonUtils.Companion.gotoProtocol
-import cn.ppps.forwarder.utils.CommonUtils.Companion.previewMarkdown
-import cn.ppps.forwarder.utils.CommonUtils.Companion.previewPicture
-import cn.ppps.forwarder.utils.CommonUtils.Companion.restartApplication
 import cn.ppps.forwarder.utils.HistoryUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
-import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.XToastUtils
-import cn.ppps.forwarder.utils.sdkinit.XUpdateInit
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
 import com.xuexiang.xui.widget.actionbar.TitleBar
-import com.xuexiang.xui.widget.dialog.materialdialog.DialogAction
-import com.xuexiang.xui.widget.dialog.materialdialog.MaterialDialog
 import com.xuexiang.xui.widget.textview.supertextview.SuperTextView
-import frpclib.Frpclib
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,19 +44,9 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
         binding!!.menuVersion.setLeftString(String.format(resources.getString(R.string.about_app_version), AppUtils.getAppVersionName()))
         binding!!.menuCache.setLeftString(String.format(resources.getString(R.string.about_cache_size), CacheUtils.getTotalCacheSize(requireContext())))
 
-        if (App.FrpclibInited) {
-            binding!!.menuFrpc.setLeftString(String.format(resources.getString(R.string.about_frpc_version), Frpclib.getVersion()))
-            binding!!.menuFrpc.visibility = View.VISIBLE
-        }
-
         val dateFormat = SimpleDateFormat("yyyy", Locale.CHINA)
         val currentYear = dateFormat.format(Date())
         binding!!.copyright.text = java.lang.String.format(resources.getString(R.string.about_copyright), currentYear)
-
-        binding!!.scbAutoCheckUpdate.isChecked = SettingUtils.autoCheckUpdate
-        binding!!.scbAutoCheckUpdate.setOnCheckedChangeListener { _, isChecked ->
-            SettingUtils.autoCheckUpdate = isChecked
-        }
 
         binding!!.sbJoinPreviewProgram.isChecked = SettingUtils.joinPreviewProgram
         binding!!.sbJoinPreviewProgram.setOnCheckedChangeListener { _, isChecked ->
@@ -80,34 +58,11 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
     }
 
     override fun initListeners() {
-        binding!!.btnUpdate.setOnClickListener {
-            XUpdateInit.checkUpdate(requireContext(), true, SettingUtils.joinPreviewProgram)
-        }
         binding!!.btnCache.setOnClickListener {
             HistoryUtils.clearPreference()
             CacheUtils.clearAllCache(requireContext())
             XToastUtils.success(R.string.about_cache_purged)
             binding!!.menuCache.setLeftString(String.format(resources.getString(R.string.about_cache_size), CacheUtils.getTotalCacheSize(requireContext())))
-        }
-        binding!!.btnFrpc.setOnClickListener {
-            try {
-                val soFile = File(context?.filesDir?.absolutePath + "/libs/libgojni.so")
-                if (soFile.exists()) soFile.delete()
-                MaterialDialog.Builder(requireContext())
-                    .iconRes(R.drawable.ic_menu_frpc)
-                    .title(R.string.menu_frpc)
-                    .content(R.string.about_frpc_deleted)
-                    .cancelable(false)
-                    .positiveText(R.string.confirm)
-                    .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                        restartApplication()
-                    }
-                    .show()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Log.e("AboutFragment", "btnFrpc.setOnClickListener error: ${e.message}")
-                XToastUtils.error(e.message.toString())
-            }
         }
         binding!!.btnGithub.setOnClickListener {
             AgentWebActivity.goWeb(context, getString(R.string.url_project_github))
@@ -118,8 +73,7 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
 
         binding!!.menuJoinPreviewProgram.setOnSuperTextViewClickListener(this)
         binding!!.menuVersion.setOnSuperTextViewClickListener(this)
-        binding!!.menuWechatMiniprogram.setOnSuperTextViewClickListener(this)
-        binding!!.menuDonation.setOnSuperTextViewClickListener(this)
+
         binding!!.menuUserProtocol.setOnSuperTextViewClickListener(this)
         binding!!.menuPrivacyProtocol.setOnSuperTextViewClickListener(this)
     }
@@ -143,17 +97,6 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
                 )
             }
 
-            R.id.menu_donation -> {
-                previewMarkdown(this, getString(R.string.about_item_donation_link), getString(R.string.url_donation_link), false)
-            }
-
-            R.id.menu_wechat_miniprogram -> {
-                if (HttpServerUtils.safetyMeasures != 3) {
-                    XToastUtils.error("微信小程序只支持SM4加密传输！请前往主动控制·服务端修改安全措施！")
-                    //return
-                }
-                previewPicture(this, getString(R.string.url_wechat_miniprogram), null)
-            }
 
             R.id.menu_user_protocol -> {
                 gotoProtocol(this, isPrivacy = false, isImmersive = false)

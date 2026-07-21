@@ -3,14 +3,9 @@ package cn.ppps.forwarder
 import android.annotation.SuppressLint
 import android.app.Application
 import android.app.PendingIntent
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.location.Geocoder
-import android.net.ConnectivityManager
-import android.net.wifi.WifiManager
 import android.os.Build
 import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDex
@@ -19,47 +14,30 @@ import androidx.work.WorkManager
 import cn.ppps.forwarder.activity.MainActivity
 import cn.ppps.forwarder.core.Core
 import cn.ppps.forwarder.database.AppDatabase
-import cn.ppps.forwarder.database.repository.FrpcRepository
 import cn.ppps.forwarder.database.repository.LogsRepository
 import cn.ppps.forwarder.database.repository.MsgRepository
 import cn.ppps.forwarder.database.repository.RuleRepository
 import cn.ppps.forwarder.database.repository.SenderRepository
 import cn.ppps.forwarder.database.repository.TaskRepository
 import cn.ppps.forwarder.entity.SimInfo
-import cn.ppps.forwarder.receiver.BatteryReceiver
-import cn.ppps.forwarder.receiver.BluetoothReceiver
 import cn.ppps.forwarder.receiver.CactusReceiver
-import cn.ppps.forwarder.receiver.LockScreenReceiver
-import cn.ppps.forwarder.receiver.NetworkChangeReceiver
-import cn.ppps.forwarder.service.BluetoothScanService
 import cn.ppps.forwarder.service.ForegroundService
-import cn.ppps.forwarder.service.HttpServerService
-import cn.ppps.forwarder.service.LocationService
 import cn.ppps.forwarder.utils.ACTION_START
 import cn.ppps.forwarder.utils.AppInfo
 import cn.ppps.forwarder.utils.CactusSave
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_ID
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_NAME
 import cn.ppps.forwarder.utils.FRONT_NOTIFY_ID
-import cn.ppps.forwarder.utils.FRPC_LIB_VERSION
 import cn.ppps.forwarder.utils.HistoryUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.Log
-import cn.ppps.forwarder.utils.ProximitySensorScreenHelper
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.SharedPreference
-import cn.ppps.forwarder.utils.sdkinit.UMengInit
 import cn.ppps.forwarder.utils.sdkinit.XBasicLibInit
-import cn.ppps.forwarder.utils.sdkinit.XUpdateInit
-import cn.ppps.forwarder.utils.tinker.TinkerLoadLibrary
 import com.gyf.cactus.Cactus
 import com.gyf.cactus.callback.CactusCallback
 import com.gyf.cactus.ext.cactus
 import com.hjq.language.MultiLanguages
 import com.hjq.language.OnLanguageListener
-import com.king.location.LocationClient
-import com.xuexiang.xutil.file.FileUtils
-import frpclib.Frpclib
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -81,7 +59,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
 
     val applicationScope = CoroutineScope(SupervisorJob())
     val database by lazy { AppDatabase.getInstance(this) }
-    val frpcRepository by lazy { FrpcRepository(database.frpcDao()) }
     val msgRepository by lazy { MsgRepository(database.msgDao()) }
     val logsRepository by lazy { LogsRepository(database.logsDao()) }
     val ruleRepository by lazy { RuleRepository(database.ruleDao()) }
@@ -132,20 +109,13 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
         val mStatus = MutableLiveData<Boolean>().apply { value = true } //运行状态
         var mDisposable: Disposable? = null
 
-        //Location相关
-        val LocationClient by lazy { LocationClient(context) }
-        val Geocoder by lazy { Geocoder(context) }
         val DateFormat by lazy { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
-
-        //Frpclib是否已经初始化
-        var FrpclibInited = false
 
         //是否需要在拼接字符串时添加空格
         var isNeedSpaceBetweenWords = false
     }
 
     override fun attachBaseContext(base: Context) {
-        //super.attachBaseContext(base)
         // 绑定语种
         super.attachBaseContext(MultiLanguages.attach(base))
         //解决4.x运行崩溃的问题
@@ -186,18 +156,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
             //初始化WorkManager
             WorkManager.initialize(this, Configuration.Builder().build())
 
-            //动态加载FrpcLib
-            val libPath = filesDir.absolutePath + "/libs"
-            val soFile = File(libPath)
-            if (soFile.exists()) {
-                try {
-                    TinkerLoadLibrary.installNativeLibraryPath(classLoader, soFile)
-                    FrpclibInited = FileUtils.isFileExists(filesDir.absolutePath + "/libs/libgojni.so") && FRPC_LIB_VERSION == Frpclib.getVersion()
-                } catch (throwable: Throwable) {
-                    Log.e("APP", throwable.message.toString())
-                }
-            }
-
             //启动前台服务
             val foregroundServiceIntent = Intent(this, ForegroundService::class.java)
             foregroundServiceIntent.action = ACTION_START
@@ -207,65 +165,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
                 startService(foregroundServiceIntent)
             }
 
-            //启动HttpServer
-            if (HttpServerUtils.enableServerAutorun) {
-                Intent(this, HttpServerService::class.java).also {
-                    startService(it)
-                }
-            }
-
-            //启动LocationService
-            if (SettingUtils.enableLocation) {
-                val locationServiceIntent = Intent(this, LocationService::class.java)
-                locationServiceIntent.action = ACTION_START
-                startService(locationServiceIntent)
-            }
-
-            //监听电量&充电状态变化
-            val batteryReceiver = BatteryReceiver()
-            val batteryFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            registerReceiver(batteryReceiver, batteryFilter)
-
-            //监听蓝牙状态变化
-            val bluetoothReceiver = BluetoothReceiver()
-            val filter = IntentFilter().apply {
-                addAction(BluetoothDevice.ACTION_FOUND)
-                addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-                addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
-                addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
-                addAction(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED)
-                addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
-                addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-                addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-                addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-            }
-            registerReceiver(bluetoothReceiver, filter)
-            if (SettingUtils.enableBluetooth) {
-                val bluetoothScanServiceIntent = Intent(this, BluetoothScanService::class.java)
-                bluetoothScanServiceIntent.action = ACTION_START
-                startService(bluetoothScanServiceIntent)
-            }
-
-            //监听网络变化
-            val networkReceiver = NetworkChangeReceiver()
-            val networkFilter = IntentFilter().apply {
-                addAction(ConnectivityManager.CONNECTIVITY_ACTION)
-                addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
-                addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
-                //addAction("android.intent.action.DATA_CONNECTION_STATE_CHANGED")
-            }
-            registerReceiver(networkReceiver, networkFilter)
-
-            //监听锁屏&解锁
-            val lockScreenReceiver = LockScreenReceiver()
-            val lockScreenFilter = IntentFilter().apply {
-                addAction(Intent.ACTION_SCREEN_OFF)
-                addAction(Intent.ACTION_SCREEN_ON)
-                addAction(Intent.ACTION_USER_PRESENT)
-            }
-            registerReceiver(lockScreenReceiver, lockScreenFilter)
-            //靠近听筒关屏
-            ProximitySensorScreenHelper.refresh(this)
             //Cactus 集成双进程前台服务，JobScheduler，onePix(一像素)，WorkManager，无声音乐
             if (SettingUtils.enableCactus) {
                 //注册广播监听器
@@ -335,16 +234,11 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
         Log.init(applicationContext)
         // 转发历史工具类初始化
         HistoryUtils.init(applicationContext)
-        // 版本更新初始化
-        XUpdateInit.init(this)
-        // 运营统计数据
-        UMengInit.init(this)
         // 初始化语种切换框架
         MultiLanguages.init(this)
         // 设置语种变化监听器
         MultiLanguages.setOnLanguageListener(object : OnLanguageListener {
             override fun onAppLocaleChange(oldLocale: Locale, newLocale: Locale) {
-                // 注意：只有setAppLanguage时触发，clearAppLanguage时不触发
                 Log.i(TAG, "监听到应用切换了语种，旧语种：$oldLocale，新语种：$newLocale")
                 switchLanguage(newLocale)
             }
@@ -352,11 +246,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
             override fun onSystemLocaleChange(oldLocale: Locale, newLocale: Locale) {
                 Log.i(TAG, "监听到系统切换了语种，旧语种：$oldLocale，新语种：$newLocale")
                 switchLanguage(newLocale)
-                /*val isFlowSystem = SettingUtils.isFlowSystemLanguage //MultiLanguages.isSystemLanguage(context)取值不对，一直是false
-                Log.i(TAG, "监听到系统切换了语种，旧语种：$oldLocale，新语种：$newLocale，是否跟随系统：$isFlowSystem")
-                if (isFlowSystem) {
-                    CommonUtils.switchLanguage(oldLocale, newLocale)
-                }*/
             }
         })
         switchLanguage(MultiLanguages.getAppLanguage(this))
@@ -479,7 +368,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
         CALL_TYPE_MAP.clear()
         CALL_TYPE_MAP.putAll(
             mapOf(
-                //"0" to getString(R.string.unknown_call),
                 "1" to getString(R.string.incoming_call_ended),
                 "2" to getString(R.string.outgoing_call_ended),
                 "3" to getString(R.string.missed_call),

@@ -176,16 +176,6 @@
                     android:padding="5dp"
                     android:text="@string/server_test" />
 
-                <com.xuexiang.xui.widget.button.ButtonView
-                    android:id="@+id/btn_wechat_miniprogram"
-                    style="@style/ButtonView.Green"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:gravity="center"
-                    android:minWidth="70dp"
-                    android:padding="5dp"
-                    android:text="@string/about_item_wechat_miniprogram" />
 
             </LinearLayout>
 

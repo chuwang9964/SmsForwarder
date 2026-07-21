@@ -22,7 +22,6 @@ import cn.ppps.forwarder.database.entity.Task
 import cn.ppps.forwarder.databinding.FragmentTasksEditBinding
 import cn.ppps.forwarder.entity.TaskSetting
 import cn.ppps.forwarder.entity.condition.CronSetting
-import cn.ppps.forwarder.service.LocationService
 import cn.ppps.forwarder.utils.*
 import cn.ppps.forwarder.utils.task.CronJobScheduler
 import com.xuexiang.xaop.annotation.SingleClick
@@ -87,53 +86,11 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             R.drawable.auto_task_icon_custom_time,
         ),
         PageInfo(
-            getString(R.string.task_to_address),
-            "cn.ppps.forwarder.fragment.condition.ToAddressFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_to_address,
-        ),
-        PageInfo(
-            getString(R.string.task_leave_address),
-            "cn.ppps.forwarder.fragment.condition.LeaveAddressFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_leave_address,
-        ),
-        PageInfo(
-            getString(R.string.task_network),
-            "cn.ppps.forwarder.fragment.condition.NetworkFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_network
-        ),
-        PageInfo(
             getString(R.string.task_sim),
             "cn.ppps.forwarder.fragment.condition.SimFragment",
             "",
             CoreAnim.slide,
             R.drawable.auto_task_icon_sim
-        ),
-        PageInfo(
-            getString(R.string.task_battery),
-            "cn.ppps.forwarder.fragment.condition.BatteryFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_battery
-        ),
-        PageInfo(
-            getString(R.string.task_charge),
-            "cn.ppps.forwarder.fragment.condition.ChargeFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_charge
-        ),
-        PageInfo(
-            getString(R.string.task_lock_screen),
-            "cn.ppps.forwarder.fragment.condition.LockScreenFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_lock_screen
         ),
         PageInfo(
             getString(R.string.task_sms),
@@ -149,20 +106,6 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             CoreAnim.slide,
             R.drawable.auto_task_icon_incall
         ),
-        PageInfo(
-            getString(R.string.task_app),
-            "cn.ppps.forwarder.fragment.condition.MsgFragment",
-            "app",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_start_activity
-        ),
-        PageInfo(
-            getString(R.string.task_bluetooth),
-            "cn.ppps.forwarder.fragment.condition.BluetoothFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_bluetooth
-        ),
     )
 
     private var TASK_ACTION_FRAGMENT_LIST = listOf(
@@ -174,39 +117,11 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             R.drawable.auto_task_icon_sms
         ),
         PageInfo(
-            getString(R.string.task_notification),
-            "cn.ppps.forwarder.fragment.action.NotificationFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_notification,
-        ),
-        PageInfo(
             getString(R.string.task_cleaner),
             "cn.ppps.forwarder.fragment.action.CleanerFragment",
             "",
             CoreAnim.slide,
             R.drawable.auto_task_icon_cleaner
-        ),
-        PageInfo(
-            getString(R.string.task_settings),
-            "cn.ppps.forwarder.fragment.action.SettingsFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_settings
-        ),
-        PageInfo(
-            getString(R.string.task_frpc),
-            "cn.ppps.forwarder.fragment.action.FrpcFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_frpc
-        ),
-        PageInfo(
-            getString(R.string.task_http_server),
-            "cn.ppps.forwarder.fragment.action.HttpServerFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_http_server
         ),
         PageInfo(
             getString(R.string.task_rule),
@@ -242,13 +157,6 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             "",
             CoreAnim.slide,
             R.drawable.auto_task_icon_task
-        ),
-        PageInfo(
-            getString(R.string.task_wol),
-            "cn.ppps.forwarder.fragment.action.WolFragment",
-            "",
-            CoreAnim.slide,
-            R.drawable.auto_task_icon_wol
         ),
     )
 
@@ -482,9 +390,9 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             throw Exception(getString(R.string.invalid_actions))
         }
 
-        //短信广播/通话广播/APP通知 类型条件只能放在第一个
+        //短信广播/通话广播 类型条件只能放在第一个
         for (i in 1 until conditionsList.size) {
-            if (conditionsList[i].type == TASK_CONDITION_SMS || conditionsList[i].type == TASK_CONDITION_CALL || conditionsList[i].type == TASK_CONDITION_APP) {
+            if (conditionsList[i].type == TASK_CONDITION_SMS || conditionsList[i].type == TASK_CONDITION_CALL) {
                 throw Exception(getString(R.string.msg_condition_must_be_trigger))
             }
         }
@@ -546,44 +454,20 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
             //判断点击的是条件还是动作
             if (widgetInfo.classPath.contains(".condition.")) {
                 val typeCondition = pos + KEY_BACK_CODE_CONDITION
-                //短信广播、通话广播、APP通知 类型条件必须作为触发提交
-                if ((typeCondition == TASK_CONDITION_SMS || typeCondition == TASK_CONDITION_CALL || typeCondition == TASK_CONDITION_APP) && actionsList.isNotEmpty()) {
+                //短信广播、通话广播 类型条件必须作为触发提交
+                if ((typeCondition == TASK_CONDITION_SMS || typeCondition == TASK_CONDITION_CALL) && actionsList.isNotEmpty()) {
                     XToastUtils.error(getString(R.string.msg_condition_must_be_trigger))
                     return
                 }
                 //判断是否已经添加过该类型条件
                 for (item in conditionsList) {
-                    //注意：TASK_CONDITION_XXX 枚举值 等于 TASK_CONDITION_FRAGMENT_LIST 索引加上 KEY_BACK_CODE_CONDITION，不可改变
                     if (item.type == typeCondition) {
                         XToastUtils.error(getString(R.string.condition_already_exists))
                         return
                     }
 
-                    //必须开启定位服务，才能使用进入地点 或 离开地点 类型条件
-                    if ((typeCondition == TASK_CONDITION_TO_ADDRESS || typeCondition == TASK_CONDITION_LEAVE_ADDRESS) && !App.LocationClient.isStarted()) {
-                        MaterialDialog.Builder(requireContext())
-                            .iconRes(R.drawable.auto_task_icon_location)
-                            .title(R.string.enable_location)
-                            .content(R.string.enable_location_dialog)
-                            .cancelable(false)
-                            .positiveText(R.string.lab_yes)
-                            .negativeText(R.string.lab_no).onPositive { _: MaterialDialog?, _: DialogAction? ->
-                                SettingUtils.enableLocation = true
-                                val serviceIntent = Intent(requireContext(), LocationService::class.java)
-                                serviceIntent.action = ACTION_START
-                                requireContext().startService(serviceIntent)
-                            }.show()
-                        return
-                    }
-
-                    //进入地点 或 离开地点 类型条件互斥
-                    if ((typeCondition == TASK_CONDITION_TO_ADDRESS || typeCondition == TASK_CONDITION_LEAVE_ADDRESS) && (item.type == TASK_CONDITION_TO_ADDRESS || item.type == TASK_CONDITION_LEAVE_ADDRESS)) {
-                        XToastUtils.error(getString(R.string.only_one_location_condition))
-                        return
-                    }
-
-                    //短信广播、通话广播、APP通知 类型条件互斥
-                    if ((typeCondition == TASK_CONDITION_SMS || typeCondition == TASK_CONDITION_CALL || typeCondition == TASK_CONDITION_APP) && (item.type == TASK_CONDITION_SMS || item.type == TASK_CONDITION_CALL || item.type == TASK_CONDITION_APP)) {
+                    //短信广播、通话广播 类型条件互斥
+                    if ((typeCondition == TASK_CONDITION_SMS || typeCondition == TASK_CONDITION_CALL) && (item.type == TASK_CONDITION_SMS || item.type == TASK_CONDITION_CALL)) {
                         XToastUtils.error(getString(R.string.only_one_msg_condition))
                         return
                     }
@@ -592,7 +476,6 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
                 val typeAction = pos + KEY_BACK_CODE_ACTION
                 //判断是否已经添加过该类型动作
                 for (item in actionsList) {
-                    //注意：TASK_ACTION_XXX 枚举值 等于 TASK_ACTION_FRAGMENT_LIST 索引加上 KEY_BACK_CODE_ACTION，不可改变
                     if (item.type == typeAction) {
                         XToastUtils.error(getString(R.string.action_already_exists))
                         return

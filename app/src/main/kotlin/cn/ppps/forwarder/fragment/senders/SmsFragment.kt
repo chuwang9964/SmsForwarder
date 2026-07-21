@@ -21,7 +21,6 @@ import cn.ppps.forwarder.entity.MsgInfo
 import cn.ppps.forwarder.entity.setting.SmsSetting
 import cn.ppps.forwarder.utils.CommonUtils
 import cn.ppps.forwarder.utils.EVENT_TOAST_ERROR
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.KEY_SENDER_CLONE
 import cn.ppps.forwarder.utils.KEY_SENDER_ID
 import cn.ppps.forwarder.utils.KEY_SENDER_TEST
@@ -102,7 +101,6 @@ class SmsFragment : BaseFragment<FragmentSendersSmsBinding?>(), View.OnClickList
                         }
                         // 处理权限请求失败的逻辑
                         XToastUtils.error(R.string.toast_denied)
-                        HttpServerUtils.enableApiSmsSend = false
                         return
                     }
                     // 处理权限请求成功的逻辑

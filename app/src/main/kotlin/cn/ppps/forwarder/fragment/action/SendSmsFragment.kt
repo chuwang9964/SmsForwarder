@@ -9,7 +9,6 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
@@ -20,10 +19,8 @@ import cn.ppps.forwarder.databinding.FragmentTasksActionSendSmsBinding
 import cn.ppps.forwarder.entity.MsgInfo
 import cn.ppps.forwarder.entity.TaskSetting
 import cn.ppps.forwarder.entity.action.SmsSetting
-import cn.ppps.forwarder.server.model.ConfigData
 import cn.ppps.forwarder.utils.EVENT_KEY_PHONE_NUMBERS
 import cn.ppps.forwarder.utils.EVENT_KEY_SIM_SLOT
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.KEY_BACK_DATA_ACTION
 import cn.ppps.forwarder.utils.KEY_BACK_DESCRIPTION_ACTION
 import cn.ppps.forwarder.utils.KEY_EVENT_DATA_ACTION
@@ -92,15 +89,6 @@ class SendSmsFragment : BaseFragment<FragmentTasksActionSendSmsBinding?>(), View
                 binding!!.btnTest.text = getString(R.string.test)
             }
         })
-
-        //卡槽信息
-        val serverConfigStr = HttpServerUtils.serverConfig
-        if (!TextUtils.isEmpty(serverConfigStr)) {
-            val serverConfig: ConfigData =
-                Gson().fromJson(serverConfigStr, object : TypeToken<ConfigData>() {}.type)
-            binding!!.rbSimSlot1.text = "SIM1：" + serverConfig.extraSim1
-            binding!!.rbSimSlot2.text = "SIM2：" + serverConfig.extraSim2
-        }
 
         Log.d(TAG, "initViews eventData:$eventData")
         if (eventData != null) {

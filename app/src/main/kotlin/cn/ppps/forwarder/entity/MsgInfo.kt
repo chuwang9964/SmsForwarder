@@ -7,7 +7,6 @@ import cn.ppps.forwarder.App.Companion.CALL_TYPE_MAP
 import cn.ppps.forwarder.R
 import cn.ppps.forwarder.utils.AppUtils
 import cn.ppps.forwarder.utils.BatteryUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.SettingUtils
@@ -250,7 +249,7 @@ data class MsgInfo(
     private fun String.replaceLocationTag(encoderName: String = ""): String {
         if (TextUtils.isEmpty(this)) return this
 
-        val location = HttpServerUtils.apiLocationCache
+        val location = LocationInfo()
         var locationStr = location.toString()
         var address = location.address
         when (encoderName) {

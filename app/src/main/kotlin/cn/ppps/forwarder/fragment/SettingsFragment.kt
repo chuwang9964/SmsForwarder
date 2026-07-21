@@ -26,8 +26,6 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import cn.ppps.forwarder.App
 import cn.ppps.forwarder.R
 import cn.ppps.forwarder.activity.MainActivity
@@ -36,32 +34,25 @@ import cn.ppps.forwarder.adapter.spinner.AppListSpinnerAdapter
 import cn.ppps.forwarder.core.BaseFragment
 import cn.ppps.forwarder.databinding.FragmentSettingsBinding
 import cn.ppps.forwarder.entity.SimInfo
-import cn.ppps.forwarder.fragment.client.CloneFragment
 import cn.ppps.forwarder.receiver.BootCompletedReceiver
-import cn.ppps.forwarder.service.BluetoothScanService
 import cn.ppps.forwarder.service.ForegroundService
-import cn.ppps.forwarder.service.LocationService
-import cn.ppps.forwarder.service.NotificationService
 import cn.ppps.forwarder.utils.ACTION_RESTART
 import cn.ppps.forwarder.utils.ACTION_START
 import cn.ppps.forwarder.utils.ACTION_STOP
 import cn.ppps.forwarder.utils.ACTION_UPDATE_NOTIFICATION
 import cn.ppps.forwarder.utils.AppUtils.getAppPackageName
-import cn.ppps.forwarder.utils.BluetoothUtils
 import cn.ppps.forwarder.utils.CommonUtils
 import cn.ppps.forwarder.utils.DataProvider
 import cn.ppps.forwarder.utils.EVENT_LOAD_APP_LIST
 import cn.ppps.forwarder.utils.EXTRA_UPDATE_NOTIFICATION
 import cn.ppps.forwarder.utils.KEY_DEFAULT_SELECTION
 import cn.ppps.forwarder.utils.KeepAliveUtils
-import cn.ppps.forwarder.utils.LocationUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.ProximitySensorScreenHelper
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.XToastUtils
 import cn.ppps.forwarder.widget.GuideTipsDialog
-import cn.ppps.forwarder.workers.LoadAppListWorker
 import com.hjq.language.LocaleContract
 import com.hjq.language.MultiLanguages
 import com.hjq.permissions.OnPermissionCallback
@@ -118,15 +109,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
             @SingleClick
             override fun performAction(view: View) {
                 GuideTipsDialog.showTipsForce(requireContext())
-            }
-        })
-        titleBar!!.addAction(object : TitleBar.ImageAction(R.drawable.ic_restore) {
-            @SingleClick
-            override fun performAction(view: View) {
-                PageOption.to(CloneFragment::class.java)
-                    .putInt(KEY_DEFAULT_SELECTION, 1) //默认离线模式
-                    .setNewActivity(true)
-                    .open(this@SettingsFragment)
             }
         })
         return titleBar
@@ -485,49 +467,11 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
         }
     }
 
-    //转发应用通知
+    //转发应用通知（已移除）
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private fun switchEnableAppNotify(sbEnableAppNotify: SwitchButton, scbCancelAppNotify: SmoothCheckBox, scbNotUserPresent: SmoothCheckBox) {
-        sbEnableAppNotify.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
-            binding!!.layoutOptionalAction.visibility = if (isChecked) View.VISIBLE else View.GONE
-            SettingUtils.enableAppNotify = isChecked
-            if (isChecked) {
-                XXPermissions.with(this)
-                    .permission(
-                        PermissionLists.getBindNotificationListenerServicePermission(
-                            NotificationService::class.java
-                        )
-                    )
-                    .request(object : OnPermissionCallback {
-                        override fun onResult(grantedList: MutableList<IPermission>, deniedList: MutableList<IPermission>) {
-                            val allGranted = deniedList.isEmpty()
-                            if (!allGranted) {
-                                Log.e(TAG, "onGranted: permissions=$deniedList, allGranted=false")
-                                SettingUtils.enableAppNotify = false
-                                sbEnableAppNotify.isChecked = false
-                                XToastUtils.error(R.string.tips_notification_listener)
-                                return
-                            }
-                            // 处理权限请求成功的逻辑
-                            SettingUtils.enableAppNotify = true
-                            sbEnableAppNotify.isChecked = true
-                            CommonUtils.toggleNotificationListenerService(requireContext())
-                        }
-                    })
-            }
-        }
-        val isEnable = SettingUtils.enableAppNotify
-        sbEnableAppNotify.isChecked = isEnable
-        binding!!.layoutOptionalAction.visibility = if (isEnable) View.VISIBLE else View.GONE
-
-        scbCancelAppNotify.isChecked = SettingUtils.enableCancelAppNotify
-        scbCancelAppNotify.setOnCheckedChangeListener { _: SmoothCheckBox, isChecked: Boolean ->
-            SettingUtils.enableCancelAppNotify = isChecked
-        }
-        scbNotUserPresent.isChecked = SettingUtils.enableNotUserPresent
-        scbNotUserPresent.setOnCheckedChangeListener { _: SmoothCheckBox, isChecked: Boolean ->
-            SettingUtils.enableNotUserPresent = isChecked
-        }
+        sbEnableAppNotify.isEnabled = false
+        sbEnableAppNotify.isChecked = false
     }
 
     //发现蓝牙设备服务
@@ -587,22 +531,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
 
     }
 
-    //重启蓝牙扫描服务
+    //重启蓝牙扫描服务（已移除）
     private fun restartBluetoothService(action: String = ACTION_RESTART) {
-        if (!initViewsFinished) return
-        Log.d(TAG, "restartBluetoothService, action: $action")
-        val serviceIntent = Intent(requireContext(), BluetoothScanService::class.java)
-        //如果蓝牙功能已启用，但是系统蓝牙功能不可用，则关闭蓝牙功能
-        if (SettingUtils.enableBluetooth && (!BluetoothUtils.isBluetoothEnabled() || !BluetoothUtils.hasBluetoothCapability(App.context))) {
-            XToastUtils.error(getString(R.string.toast_bluetooth_not_enabled))
-            SettingUtils.enableBluetooth = false
-            binding!!.sbEnableBluetooth.isChecked = false
-            binding!!.layoutBluetoothSetting.visibility = View.GONE
-            serviceIntent.action = ACTION_STOP
-        } else {
-            serviceIntent.action = action
-        }
-        requireContext().startService(serviceIntent)
+        // Bluetooth feature removed
     }
 
     //GPS定位服务
@@ -702,22 +633,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
         }
     }
 
-    //重启定位服务
+    //重启定位服务（已移除）
     private fun restartLocationService(action: String = ACTION_RESTART) {
-        if (!initViewsFinished) return
-        Log.d(TAG, "restartLocationService, action: $action")
-        val serviceIntent = Intent(requireContext(), LocationService::class.java)
-        //如果定位功能已启用，但是系统定位功能不可用，则关闭定位功能
-        if (SettingUtils.enableLocation && (!LocationUtils.isLocationEnabled(App.context) || !LocationUtils.hasLocationCapability(App.context))) {
-            XToastUtils.error(getString(R.string.toast_location_not_enabled))
-            SettingUtils.enableLocation = false
-            binding!!.sbEnableLocation.isChecked = false
-            binding!!.layoutLocationSetting.visibility = View.GONE
-            serviceIntent.action = ACTION_STOP
-        } else {
-            serviceIntent.action = action
-        }
-        requireContext().startService(serviceIntent)
+        // Location feature removed
     }
 
     //接受短信指令
@@ -827,8 +745,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
             SettingUtils.enableLoadAppList = isChecked
             if (isChecked) {
                 XToastUtils.info(getString(R.string.loading_app_list))
-                val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-                WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             }
         }
         scbLoadUserApp.isChecked = SettingUtils.enableLoadUserAppList
@@ -841,8 +757,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
             }
             if (isChecked && SettingUtils.enableLoadAppList && App.UserAppList.isEmpty()) {
                 XToastUtils.info(getString(R.string.loading_app_list))
-                val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-                WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             }
         }
         scbLoadSystemApp.isChecked = SettingUtils.enableLoadSystemAppList
@@ -855,8 +769,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
             }
             if (isChecked && SettingUtils.enableLoadAppList && App.SystemAppList.isEmpty()) {
                 XToastUtils.info(getString(R.string.loading_app_list))
-                val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-                WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             }
         }
     }
@@ -1402,8 +1314,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
 
         if (App.UserAppList.isEmpty() && App.SystemAppList.isEmpty()) {
             //XToastUtils.info(getString(R.string.loading_app_list))
-            val request = OneTimeWorkRequestBuilder<LoadAppListWorker>().build()
-            WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             return
         }
 
