@@ -55,13 +55,14 @@ class PhoneUtils private constructor() {
             -1
 
         /**
-         * 从 SIM 备注中提取 11 位手机号
+         * 从 SIM 备注中提取 11 位手机号（取连续数字段末尾 11 位）
          * 例如："中国移动_13660486937" -> "13660486937"
          *       "SIM1_中国移动_13660486937" -> "13660486937"
+         *       "中国联通_+8613268121931" -> "13268121931"
          */
         fun extractPhoneNumber(simRemark: String?): String {
             if (simRemark.isNullOrEmpty()) return ""
-            return Regex("""\d{11}""").find(simRemark)?.value ?: ""
+            return Regex("""(\d{11})(?!\d)""").find(simRemark)?.groupValues?.get(1) ?: ""
         }
 
         //获取多卡信息

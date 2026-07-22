@@ -20,7 +20,11 @@ import cn.ppps.forwarder.database.entity.Sender
 import cn.ppps.forwarder.database.entity.Task
 import cn.ppps.forwarder.database.ext.ConvertersDate
 import cn.ppps.forwarder.entity.setting.WebhookSetting
+import cn.ppps.forwarder.utils.CHECK_IS
+import cn.ppps.forwarder.utils.CHECK_SIM_SLOT_ALL
 import cn.ppps.forwarder.utils.DATABASE_NAME
+import cn.ppps.forwarder.utils.FILED_TRANSPOND_ALL
+import cn.ppps.forwarder.utils.SENDER_LOGIC_ALL
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.TAG_LIST
 import cn.ppps.forwarder.utils.TYPE_WEBHOOK
@@ -71,6 +75,41 @@ abstract class AppDatabase : RoomDatabase() {
                         db.execSQL(
                             "INSERT INTO \"Sender\" (type, name, json_setting, status, time) VALUES (?, ?, ?, ?, ?)",
                             arrayOf(TYPE_WEBHOOK, "ticket", jsonSetting, 1, System.currentTimeMillis())
+                        )
+
+                        // 获取默认发送通道 ID，用于绑定默认规则
+                        val senderIdCursor = db.query("SELECT last_insert_rowid()")
+                        senderIdCursor.moveToFirst()
+                        val senderId = senderIdCursor.getLong(0)
+                        senderIdCursor.close()
+
+                        // 默认创建短信转发规则：全部短信 -> ticket 通道
+                        db.execSQL(
+                            """
+                            INSERT INTO "Rule" (
+                                type, filed, `check`, value, sender_id, sms_template, regex_replace,
+                                sim_slot, status, time, sender_list, sender_logic,
+                                silent_period_start, silent_period_end, silent_day_of_week, title
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """.trimIndent(),
+                            arrayOf(
+                                "sms",
+                                FILED_TRANSPOND_ALL,
+                                CHECK_IS,
+                                "",
+                                senderId,
+                                "",
+                                "",
+                                CHECK_SIM_SLOT_ALL,
+                                1,
+                                System.currentTimeMillis(),
+                                senderId.toString(),
+                                SENDER_LOGIC_ALL,
+                                0,
+                                0,
+                                "",
+                                "短信上传"
+                            )
                         )
                     }
                 }).addMigrations(

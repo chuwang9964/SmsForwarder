@@ -6,7 +6,6 @@ import cn.ppps.forwarder.App
 import cn.ppps.forwarder.App.Companion.CALL_TYPE_MAP
 import cn.ppps.forwarder.R
 import cn.ppps.forwarder.utils.AppUtils
-import cn.ppps.forwarder.utils.BatteryUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.SettingUtils
@@ -107,18 +106,6 @@ data class MsgInfo(
             .replaceTag(getString(R.string.tag_ipv4), TaskUtils.ipv4, encoderName)
             .replaceTag(getString(R.string.tag_ipv6), TaskUtils.ipv6, encoderName)
             .replaceTag(getString(R.string.tag_ip_list), TaskUtils.ipList, encoderName)
-            .replaceTag(getString(R.string.tag_battery_pct), "%.0f%%".format(TaskUtils.batteryPct), encoderName)
-            .replaceTag(getString(R.string.tag_battery_status), BatteryUtils.getStatus(TaskUtils.batteryStatus), encoderName)
-            .replaceTag(getString(R.string.tag_battery_plugged), BatteryUtils.getPlugged(TaskUtils.batteryPlugged), encoderName)
-            .replaceTag(getString(R.string.tag_battery_info), TaskUtils.batteryInfo, encoderName)
-            .replaceTag(
-                getString(R.string.tag_battery_info_simple),
-                "%.0f%%".format(TaskUtils.batteryPct)
-                        + with(BatteryUtils.getPlugged(TaskUtils.batteryPlugged)) {
-                    if (this == getString(R.string.battery_unknown)) "" else " - $this"
-                },
-                encoderName
-            )
             .replaceTag(
                 getString(R.string.tag_net_type), with(NetworkUtils.getNetStateType()) {
                     if (this == NetworkUtils.NetState.NET_NO || this == NetworkUtils.NetState.NET_UNKNOWN)
