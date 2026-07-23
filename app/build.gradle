@@ -144,8 +144,8 @@ android {
             // 调试模式开关
             debuggable true
             jniDebuggable true
-            // 移除无用的资源
-            shrinkResources true
+            // Debug 构建关闭资源压缩，避免库资源被误删导致合并失败
+            shrinkResources false
             // 代码混淆开关
             minifyEnabled true
             // 混淆配置

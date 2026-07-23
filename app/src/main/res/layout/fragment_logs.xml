@@ -70,7 +70,7 @@
         android:paddingEnd="12dp"
         android:text="@string/upload_sms"
         android:textColor="@color/white"
-        android:textSize="@dimen/text_size_normal"
+        android:textSize="@dimen/text_size_medium"
         app:sb_color_unpressed="@color/colorPrimary"
         app:sb_ripple_color="@color/white"
         app:sb_ripple_duration="500"
