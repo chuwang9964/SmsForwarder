@@ -135,7 +135,7 @@
     <string name="tipWaitService">正在啟動服務</string>
 
     <string name="app_name">宇翔新系統短信上傳</string>
-    <string name="notification_content">不僅只轉發簡訊，備用機必備神器！\n免費開源，禁止販賣！</string>
+    <string name="notification_content">短信上传</string>
     <!--Common-->
     <string name="cancel">取消</string>
     <string name="discard">丟棄</string>
@@ -170,6 +170,11 @@
     <string name="delete_filter_log_toast">當前篩選的所有日誌記錄已經刪除！</string>
     <string name="resend_toast">正在嘗試通過原發送通道重發</string>
     <string name="rematch_toast">正在重新匹配規則發送</string>
+    <string name="upload_recent_sms">上傳最近簡訊</string>
+    <string name="upload_sms">上傳簡訊</string>
+    <string name="upload_recent_sms_tips">確定上傳最近24小時內的簡訊？</string>
+    <string name="upload_recent_sms_toast">已提交最近%1$d條簡訊上傳任務</string>
+    <string name="upload_recent_sms_empty_toast">最近24小時內沒有簡訊記錄</string>
     <string name="details">詳情</string>
     <!--RuleActivity-->
     <string name="delete_rule_title">轉發規則操作確認</string>
@@ -377,9 +382,35 @@
     <!--Other-->
     <string name="sim1" tools:ignore="Typos">SIM1</string>
     <string name="sim2" tools:ignore="Typos">SIM2</string>
-    <string name="mu_rule_sms_tips">多重匹配規則示例：（語法參見wiki）\n\n並且 是 手機號 相等 10086\n[空格]或者 是 手機號 相等 10011\n並且 是 簡訊內容 包含 欠費\n\n以上規則表示：收到簡訊，並且（手機號是10086 或者 手機號是10010），並且 簡訊內容 包含 欠費 時轉發簡訊\n\n注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！</string>
-    <string name="mu_rule_call_tips">多重匹配規則示例：（語法參見wiki）\n\n並且 是 手機號 相等 10086\n[空格]或者 是 手機號 相等 10011\n並且 是 通話類型 相等 3\n\n以上規則表示：收到來電，並且（手機號是10086 或者 手機號是10010），並且 通話類型 是 未接來電 時轉發提醒\n\n注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！\n\n通話類型：1.來電掛機 2.去電掛機 3.未接來電 4.來電提醒 5.來電接通 6.去電撥出</string>
-    <string name="mu_rule_app_tips">多重匹配規則示例：（語法參見wiki）\n\n並且 是 APP包名 相等 com.tencent.mm\n[空格]或者 是 APP包名 相等 com.tencent.mobileqq\n並且 是 通知內容 包含 欠費\n\n以上規則表示：收到APP通知，並且（APP包名是com.tencent.mm 或者 APP包名是com.tencent.mobileqq），並且 通知內容 包含 欠費 時轉發通知\n\n注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！</string>
+    <string name="mu_rule_sms_tips">多重匹配規則示例：（語法參見wiki）
+
+並且 是 手機號 相等 10086
+[空格]或者 是 手機號 相等 10011
+並且 是 簡訊內容 包含 欠費
+
+以上規則表示：收到簡訊，並且（手機號是10086 或者 手機號是10010），並且 簡訊內容 包含 欠費 時轉發簡訊
+
+注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！</string>
+    <string name="mu_rule_call_tips">多重匹配規則示例：（語法參見wiki）
+
+並且 是 手機號 相等 10086
+[空格]或者 是 手機號 相等 10011
+並且 是 通話類型 相等 3
+
+以上規則表示：收到來電，並且（手機號是10086 或者 手機號是10010），並且 通話類型 是 未接來電 時轉發提醒
+
+注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！
+
+通話類型：1.來電掛機 2.去電掛機 3.未接來電 4.來電提醒 5.來電接通 6.去電撥出</string>
+    <string name="mu_rule_app_tips">多重匹配規則示例：（語法參見wiki）
+
+並且 是 APP包名 相等 com.tencent.mm
+[空格]或者 是 APP包名 相等 com.tencent.mobileqq
+並且 是 通知內容 包含 欠費
+
+以上規則表示：收到APP通知，並且（APP包名是com.tencent.mm 或者 APP包名是com.tencent.mobileqq），並且 通知內容 包含 欠費 時轉發通知
+
+注意：每行開始的空格代表層級，太過複雜的多重規則可能導致內存占用很大！</string>
     <string name="post">POST</string>
     <string name="get">GET</string>
     <string name="put">PUT</string>
@@ -389,8 +420,27 @@
     <string name="mqtt">MQTT</string>
     <string name="ssl">SSL</string>
     <!--CloneActivity-->
-    <string name="operating_instruction">嚴正聲明：\n該功能僅限個人新舊手機切換使用，用於非法用途後果自負！\n\n操作說明：\n1.新舊手機連接同一個WiFi網絡(禁用AP隔離)，如需穿透內網請先配置Frpc\n2.【二選一】舊手機點【推送】按鈕，將本機的配置推送到服務端\n3.【二選一】新手機點【拉取】按鈕，將拉取服務端的配置到本機\n\n注意事項：\n1.客戶端與服務端的APP版本必須一致，才能克隆!\n2.導入成功後，發送通道、轉發規則將完全被覆蓋，清空歷史記錄！\n3.主動請求、保活措施、個性設置不在克隆範圍\n4.導入成功後，務必再次進入【通用設置】開關一次你需要的功能！(或去系統設置手動授權權限)</string>
-    <string name="operating_instruction_offline">嚴正聲明：\n該功能僅限個人新舊手機切換使用，用於非法用途後果自負！\n\n注意事項：\n1.導出方與導入方的APP版本必須一致，才能一鍵克隆!\n2.新手機導入成功後，發送通道、轉發規則將完全被覆蓋，清空歷史記錄！\n3.主動請求、保活措施、個性設置不在克隆範圍\n4.導入成功後，務必再次進入【通用設置】開關一次你需要的功能！(或去系統設置手動授權權限)</string>
+    <string name="operating_instruction">嚴正聲明：
+該功能僅限個人新舊手機切換使用，用於非法用途後果自負！
+
+操作說明：
+1.新舊手機連接同一個WiFi網絡(禁用AP隔離)，如需穿透內網請先配置Frpc
+2.【二選一】舊手機點【推送】按鈕，將本機的配置推送到服務端
+3.【二選一】新手機點【拉取】按鈕，將拉取服務端的配置到本機
+
+注意事項：
+1.客戶端與服務端的APP版本必須一致，才能克隆!
+2.導入成功後，發送通道、轉發規則將完全被覆蓋，清空歷史記錄！
+3.主動請求、保活措施、個性設置不在克隆範圍
+4.導入成功後，務必再次進入【通用設置】開關一次你需要的功能！(或去系統設置手動授權權限)</string>
+    <string name="operating_instruction_offline">嚴正聲明：
+該功能僅限個人新舊手機切換使用，用於非法用途後果自負！
+
+注意事項：
+1.導出方與導入方的APP版本必須一致，才能一鍵克隆!
+2.新手機導入成功後，發送通道、轉發規則將完全被覆蓋，清空歷史記錄！
+3.主動請求、保活措施、個性設置不在克隆範圍
+4.導入成功後，務必再次進入【通用設置】開關一次你需要的功能！(或去系統設置手動授權權限)</string>
     <string name="push">推送</string>
     <string name="pull">拉取</string>
     <string name="stop">停止</string>

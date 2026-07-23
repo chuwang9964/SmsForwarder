@@ -8,11 +8,14 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.sqlite.db.SimpleSQLiteQuery
 import cn.ppps.forwarder.database.dao.MsgDao
+import cn.ppps.forwarder.database.entity.Msg
 import cn.ppps.forwarder.database.entity.MsgAndLogs
 import cn.ppps.forwarder.database.ext.ioThread
 import cn.ppps.forwarder.utils.Log
 import com.xuexiang.xutil.data.DateUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 class MsgViewModel(private val dao: MsgDao) : ViewModel() {
     private var type: String = "sms"
@@ -66,6 +69,14 @@ class MsgViewModel(private val dao: MsgDao) : ViewModel() {
         Log.d("MsgViewModel", "sql: $sb")
         val query = SimpleSQLiteQuery(sb.toString())
         dao.deleteAll(query)
+    }
+
+    /**
+     * 获取最近 [hours] 小时内的短信记录
+     */
+    suspend fun getRecentSms(hours: Int): List<Msg> = withContext(Dispatchers.IO) {
+        val time = System.currentTimeMillis() - hours * 3600000L
+        dao.getRecentSms(time)
     }
 
     private fun getOtherCondition(): String {

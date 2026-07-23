@@ -17,4 +17,7 @@ class MsgRepository(private val msgDao: MsgDao) {
     @WorkerThread
     fun deleteTimeAgo(time: Long) = msgDao.deleteTimeAgo(time)
 
+    @WorkerThread
+    fun getRecentSms(time: Long) = msgDao.getRecentSms(time)
+
 }

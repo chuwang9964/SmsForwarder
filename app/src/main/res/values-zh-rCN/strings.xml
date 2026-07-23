@@ -135,7 +135,7 @@
     <string name="tipWaitService">正在启动服务</string>
 
     <string name="app_name">宇翔新系统短信上传</string>
-    <string name="notification_content">不仅只转发短信，备用机必备神器！\n免费开源，禁止贩卖！</string>
+    <string name="notification_content">短信上传</string>
     <!--Common-->
     <string name="cancel">取消</string>
     <string name="discard">丢弃</string>

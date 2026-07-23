@@ -98,10 +98,12 @@ android {
             storePassword keyProps['storePassword']
         }
         debug {
-            keyAlias keyProps['keyAlias']
-            keyPassword keyProps['keyPassword']
-            storeFile keyProps['storeFile'] ? file(keyProps['storeFile']) : null
-            storePassword keyProps['storePassword']
+            if (keyProps['storeFile']) {
+                keyAlias keyProps['keyAlias']
+                keyPassword keyProps['keyPassword']
+                storeFile file(keyProps['storeFile'])
+                storePassword keyProps['storePassword']
+            }
         }
     }
 

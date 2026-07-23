@@ -134,6 +134,9 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
             initLogsFilterDialog(true)
             reloadData()
         }
+
+        binding!!.btnUpload.setOnClickListener { uploadRecentSms() }
+
         refreshSimPhones()
     }
 
@@ -221,6 +224,37 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
         viewModel.setType(currentType).setFilter(currentFilter)
         adapter.refresh()
         binding!!.recyclerView.scrollToPosition(0)
+    }
+
+    /**
+     * 上传最近24小时内的短信
+     */
+    @SingleClick
+    private fun uploadRecentSms() {
+        MaterialDialog.Builder(requireContext())
+            .iconRes(R.drawable.ic_upload)
+            .title(R.string.upload_recent_sms)
+            .content(R.string.upload_recent_sms_tips)
+            .positiveText(R.string.lab_yes)
+            .negativeText(R.string.lab_no)
+            .onPositive { _: MaterialDialog?, _: DialogAction? ->
+                lifecycleScope.launch {
+                    try {
+                        val recentSms = viewModel.getRecentSms(24)
+                        if (recentSms.isEmpty()) {
+                            XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
+                            return@launch
+                        }
+                        for (msg in recentSms) {
+                            SendUtils.rematchSendMsg(MsgAndLogs(msg, emptyList()))
+                        }
+                        XToastUtils.success(getString(R.string.upload_recent_sms_toast, recentSms.size))
+                    } catch (e: Exception) {
+                        e.message?.let { XToastUtils.error(it) }
+                    }
+                }
+            }
+            .show()
     }
 
     /**

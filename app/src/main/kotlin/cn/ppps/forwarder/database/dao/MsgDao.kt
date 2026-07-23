@@ -53,4 +53,7 @@ interface MsgDao {
     @RawQuery(observedEntities = [MsgAndLogs::class])
     fun pagingSource(query: SupportSQLiteQuery): PagingSource<Int, MsgAndLogs>
 
+    @Query("SELECT * FROM Msg WHERE type = 'sms' AND time >= :time ORDER BY id ASC")
+    fun getRecentSms(time: Long): List<Msg>
+
 }
