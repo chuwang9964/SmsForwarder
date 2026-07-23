@@ -20,6 +20,7 @@ import cn.ppps.forwarder.activity.MainActivity
 import cn.ppps.forwarder.adapter.MsgPagingAdapter
 import cn.ppps.forwarder.core.BaseFragment
 import cn.ppps.forwarder.database.entity.LogsDetail
+import cn.ppps.forwarder.database.entity.Msg
 import cn.ppps.forwarder.database.entity.MsgAndLogs
 import cn.ppps.forwarder.database.entity.Rule
 import cn.ppps.forwarder.database.viewmodel.BaseViewModelFactory
@@ -30,6 +31,10 @@ import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.SendUtils
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.XToastUtils
+import com.hjq.permissions.OnPermissionCallback
+import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
+import com.hjq.permissions.permission.base.IPermission
 import com.scwang.smartrefresh.layout.api.RefreshLayout
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
@@ -44,8 +49,10 @@ import com.xuexiang.xutil.data.DateUtils
 import com.xuexiang.xutil.resource.ResUtils.getColors
 import com.xuexiang.xutil.resource.ResUtils.getStringArray
 import com.xuexiang.xutil.tip.ToastUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -238,33 +245,68 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
 
     /**
      * 上传最近24小时内的短信
+     * 优先从系统短信应用读取，不再仅依赖转发日志
      */
     @SingleClick
     private fun uploadRecentSms() {
-        MaterialDialog.Builder(requireContext())
-            .iconRes(R.drawable.ic_upload)
-            .title(R.string.upload_recent_sms)
-            .content(R.string.upload_recent_sms_tips)
-            .positiveText(R.string.lab_yes)
-            .negativeText(R.string.lab_no)
-            .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                lifecycleScope.launch {
-                    try {
-                        val recentSms = viewModel.getRecentSms(24)
-                        if (recentSms.isEmpty()) {
-                            XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
-                            return@launch
-                        }
-                        for (msg in recentSms) {
-                            SendUtils.rematchSendMsg(MsgAndLogs(msg, emptyList()))
-                        }
-                        XToastUtils.success(getString(R.string.upload_recent_sms_toast, recentSms.size))
-                    } catch (e: Exception) {
-                        e.message?.let { XToastUtils.error(it) }
+        XXPermissions.with(this)
+            .permission(PermissionLists.getReadSmsPermission())
+            .request(object : OnPermissionCallback {
+                override fun onResult(grantedList: MutableList<IPermission>, deniedList: MutableList<IPermission>) {
+                    if (deniedList.isNotEmpty()) {
+                        XToastUtils.error(R.string.toast_denied)
+                        return
                     }
+                    MaterialDialog.Builder(requireContext())
+                        .iconRes(R.drawable.ic_upload)
+                        .title(R.string.upload_recent_sms)
+                        .content(R.string.upload_recent_sms_tips)
+                        .positiveText(R.string.lab_yes)
+                        .negativeText(R.string.lab_no)
+                        .onPositive { _: MaterialDialog?, _: DialogAction? ->
+                            lifecycleScope.launch {
+                                try {
+                                    val recentSms = withContext(Dispatchers.IO) {
+                                        PhoneUtils.getRecentSmsInfoList(24)
+                                    }
+                                    if (recentSms.isEmpty()) {
+                                        XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
+                                        return@launch
+                                    }
+                                    for (sms in recentSms) {
+                                        val msg = Msg(
+                                            0,
+                                            "sms",
+                                            sms.number,
+                                            sms.content,
+                                            sms.simId,
+                                            getSimInfoString(sms.simId),
+                                            sms.subId,
+                                            0,
+                                            Date(sms.date)
+                                        )
+                                        SendUtils.rematchSendMsg(MsgAndLogs(msg, emptyList()))
+                                    }
+                                    XToastUtils.success(getString(R.string.upload_recent_sms_toast, recentSms.size))
+                                } catch (e: Exception) {
+                                    e.message?.let { XToastUtils.error(it) }
+                                }
+                            }
+                        }
+                        .show()
                 }
-            }
-            .show()
+            })
+    }
+
+    /**
+     * 根据卡槽ID构造SIM卡信息字符串
+     */
+    private fun getSimInfoString(simId: Int): String {
+        return when (simId) {
+            0 -> "SIM1_" + SettingUtils.extraSim1
+            1 -> "SIM2_" + SettingUtils.extraSim2
+            else -> ""
+        }
     }
 
     /**

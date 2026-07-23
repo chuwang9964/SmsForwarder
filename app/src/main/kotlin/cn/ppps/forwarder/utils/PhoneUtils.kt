@@ -565,7 +565,7 @@ class PhoneUtils private constructor() {
 
         // 获取用户短信列表
         fun getSmsInfoList(
-            type: Int, limit: Int, offset: Int, keyword: String
+            type: Int, limit: Int, offset: Int, keyword: String, startTime: Long = 0L
         ): MutableList<SmsInfo> {
             val smsInfoList: MutableList<SmsInfo> = mutableListOf()
             try {
@@ -578,6 +578,10 @@ class PhoneUtils private constructor() {
                 if (!TextUtils.isEmpty(keyword)) {
                     selection += " and body like ?"
                     selectionArgs.add("%$keyword%")
+                }
+                if (startTime > 0L) {
+                    selection += " and date >= ?"
+                    selectionArgs.add("$startTime")
                 }
                 Log.d(TAG, "selection = $selection")
                 Log.d(TAG, "selectionArgs = $selectionArgs")
@@ -655,6 +659,17 @@ class PhoneUtils private constructor() {
                 Log.e(TAG, "getSmsInfoList:", e)
             }
             return smsInfoList
+        }
+
+        /**
+         * 获取最近 [hours] 小时内的系统短信（仅接收的短信）
+         *
+         * @param hours 小时数
+         * @param limit 最大条数
+         */
+        fun getRecentSmsInfoList(hours: Int, limit: Int = 1000): List<SmsInfo> {
+            val time = System.currentTimeMillis() - hours * 3600000L
+            return getSmsInfoList(type = 1, limit = limit, offset = 0, keyword = "", startTime = time)
         }
 
         /**
