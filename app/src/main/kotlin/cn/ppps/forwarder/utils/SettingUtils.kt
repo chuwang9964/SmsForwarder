@@ -99,10 +99,10 @@ class SettingUtils private constructor() {
         var musicInterval: Int by SharedPreference(SP_MUSIC_INTERVAL, 10)
 
         //请求接口失败重试次数
-        var requestRetryTimes: Int by SharedPreference(SP_REQUEST_RETRY_TIMES, 0)
+        var requestRetryTimes: Int by SharedPreference(SP_REQUEST_RETRY_TIMES, 3)
 
         //请求接口失败重试间隔（秒）
-        var requestDelayTime: Int by SharedPreference(SP_REQUEST_DELAY_TIME, 1)
+        var requestDelayTime: Int by SharedPreference(SP_REQUEST_DELAY_TIME, 5)
 
         //请求接口失败超时时间（秒）
         var requestTimeout: Int by SharedPreference(SP_REQUEST_TIMEOUT, 10)

@@ -181,6 +181,8 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
         } else {
             binding!!.layoutSim2.visibility = View.GONE
         }
+        //自动获取SIM手机号
+        autoFetchSimInfo()
         //通知内容
         editNotifyContent(binding!!.etNotifyContent)
         //启用自定义模版
@@ -971,6 +973,52 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
                 SettingUtils.extraSim2 = etExtraSim2.text.toString().trim()
             }
         })
+    }
+
+    /**
+     * 自动获取SIM卡信息并填充主键/备注
+     * 仅在字段为空且权限已授权时自动填充
+     */
+    private fun autoFetchSimInfo() {
+        XXPermissions.with(this)
+            .permission(PermissionLists.getReadPhoneStatePermission())
+            .request(object : OnPermissionCallback {
+                override fun onResult(grantedList: MutableList<IPermission>, deniedList: MutableList<IPermission>) {
+                    if (deniedList.isNotEmpty()) {
+                        Log.d(TAG, "autoFetchSimInfo: READ_PHONE_STATE denied")
+                        return
+                    }
+                    try {
+                        App.SimInfoList = PhoneUtils.getSimMultiInfo()
+                        if (App.SimInfoList.isEmpty()) {
+                            Log.d(TAG, "autoFetchSimInfo: SimInfoList is empty")
+                            return
+                        }
+                        Log.d(TAG, "autoFetchSimInfo: ${App.SimInfoList}")
+
+                        // SIM1
+                        if (App.SimInfoList.containsKey(0)) {
+                            val simInfo = App.SimInfoList[0]
+                            if (SettingUtils.subidSim1 <= 0 && SettingUtils.extraSim1.isEmpty()) {
+                                binding!!.etSubidSim1.setText(simInfo?.mSubscriptionId.toString())
+                                binding!!.etExtraSim1.setText(simInfo?.mCarrierName.toString() + "_" + simInfo?.mNumber.toString())
+                            }
+                        }
+
+                        // SIM2
+                        if (App.SimInfoList.containsKey(1) && PhoneUtils.getSimSlotCount() != 1) {
+                            val simInfo = App.SimInfoList[1]
+                            if (SettingUtils.subidSim2 <= 0 && SettingUtils.extraSim2.isEmpty()) {
+                                binding!!.etSubidSim2.setText(simInfo?.mSubscriptionId.toString())
+                                binding!!.etExtraSim2.setText(simInfo?.mCarrierName.toString() + "_" + simInfo?.mNumber.toString())
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Log.e(TAG, "autoFetchSimInfo: ${e.message}")
+                    }
+                }
+            })
     }
 
     //设置通知内容
