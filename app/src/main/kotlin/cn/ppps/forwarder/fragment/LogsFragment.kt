@@ -11,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.RadioGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.RecycledViewPool
 import com.alibaba.android.vlayout.VirtualLayoutManager
 import cn.ppps.forwarder.App.Companion.FORWARD_STATUS_MAP
@@ -147,6 +148,15 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
 
     override fun initListeners() {
         binding!!.recyclerView.adapter = adapter
+
+        // 新短信进入时自动滚动到顶部（最新短信在最上边）
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (positionStart == 0) {
+                    binding!!.recyclerView.scrollToPosition(0)
+                }
+            }
+        })
 
         //下拉刷新
         binding!!.refreshLayout.setOnRefreshListener { refreshLayout: RefreshLayout ->

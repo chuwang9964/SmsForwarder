@@ -148,10 +148,8 @@ class MainActivity : BaseActivity<ActivityMainBinding?>(), DrawerAdapter.OnItemS
         mMenuTitles = ResUtils.getStringArray(this, R.array.menu_titles)
         mMenuIcons = ResUtils.getDrawableArray(this, R.array.menu_icons)
 
-        //仅当有网络时获取提示
-        if (NetworkUtils.isHaveInternet()) {
-            showTips(this)
-        }
+        //关闭首次打开app的提示弹窗
+        //showTips(this)
     }
 
     //按返回键不退出回到桌面
