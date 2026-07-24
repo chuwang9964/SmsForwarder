@@ -244,8 +244,7 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
     }
 
     /**
-     * 上传最近24小时内的短信
-     * 优先从系统短信应用读取，不再仅依赖转发日志
+     * 短信上传：弹出日期选择器，上传所选日期的系统短信
      */
     @SingleClick
     private fun uploadRecentSms() {
@@ -257,45 +256,60 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
                         XToastUtils.error(R.string.toast_denied)
                         return
                     }
-                    MaterialDialog.Builder(requireContext())
-                        .iconRes(R.drawable.ic_upload)
-                        .title(R.string.upload_recent_sms)
-                        .content(R.string.upload_recent_sms_tips)
-                        .positiveText(R.string.lab_yes)
-                        .negativeText(R.string.lab_no)
-                        .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                            lifecycleScope.launch {
-                                try {
-                                    val recentSms = withContext(Dispatchers.IO) {
-                                        PhoneUtils.getRecentSmsInfoList(24)
-                                    }
-                                    if (recentSms.isEmpty()) {
-                                        XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
-                                        return@launch
-                                    }
-                                    for (sms in recentSms) {
-                                        val msg = Msg(
-                                            0,
-                                            "sms",
-                                            sms.number,
-                                            sms.content,
-                                            sms.simId,
-                                            getSimInfoString(sms.simId),
-                                            sms.subId,
-                                            0,
-                                            Date(sms.date)
-                                        )
-                                        SendUtils.rematchSendMsg(MsgAndLogs(msg, emptyList()))
-                                    }
-                                    XToastUtils.success(getString(R.string.upload_recent_sms_toast, recentSms.size))
-                                } catch (e: Exception) {
-                                    e.message?.let { XToastUtils.error(it) }
-                                }
-                            }
-                        }
-                        .show()
+                    showUploadDatePicker()
                 }
             })
+    }
+
+    /**
+     * 显示日期选择器，默认当前日期
+     */
+    private fun showUploadDatePicker() {
+        val calendar = Calendar.getInstance()
+        TimePickerBuilder(context) { date, _ ->
+            uploadSmsByDate(date)
+        }
+            .setType(TimePickerType.DATE)
+            .setTitleText(getString(R.string.upload_recent_sms))
+            .isDialog(true)
+            .setOutSideCancelable(false)
+            .setDate(calendar)
+            .build()
+            .show(false)
+    }
+
+    /**
+     * 上传指定日期的系统短信
+     */
+    private fun uploadSmsByDate(date: Date) {
+        lifecycleScope.launch {
+            try {
+                val recentSms = withContext(Dispatchers.IO) {
+                    PhoneUtils.getSmsInfoListByDate(date)
+                }
+                if (recentSms.isEmpty()) {
+                    XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
+                    return@launch
+                }
+                for (sms in recentSms) {
+                    val msg = Msg(
+                        0,
+                        "sms",
+                        sms.number,
+                        sms.content,
+                        sms.simId,
+                        getSimInfoString(sms.simId),
+                        sms.subId,
+                        0,
+                        Date(sms.date)
+                    )
+                    SendUtils.rematchSendMsg(MsgAndLogs(msg, emptyList()))
+                }
+                XToastUtils.success(getString(R.string.upload_recent_sms_toast, recentSms.size))
+            } catch (e: Exception) {
+                e.message?.let { XToastUtils.error(it) }
+            }
+        }
     }
 
     /**

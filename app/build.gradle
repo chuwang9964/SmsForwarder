@@ -71,7 +71,7 @@ android {
         minSdkVersion build_versions.min_sdk
         targetSdkVersion build_versions.target_sdk
         versionCode build_versions.version_code
-        versionName = "${build_versions.version_name}.${buildDate}"
+        versionName = "${build_versions.version_name}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
         buildConfigField "String", "GIT_COMMIT_ID", "\"${gitCommitId}\""
@@ -174,13 +174,10 @@ android {
         }
     }
 
-    //ABI配置——按CPU架构分别打包
+    //ABI配置——仅构建universal通用包
     splits {
         abi {
-            enable true
-            reset()
-            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-            universalApk true
+            enable false
         }
     }
     def abiCodes = ['universal': 1, 'armeabi-v7a': 2, 'arm64-v8a': 3, 'x86': 4, 'x86_64': 5]
@@ -210,7 +207,7 @@ android {
             def abiName = output.getFilter(com.android.build.OutputFile.ABI)
             if (abiName == null) abiName = "universal"
             output.versionCodeOverride = abiCodes.get(abiName, 0) * 100000 + variant.versionCode
-            output.outputFileName = "SmsF_${versionName}_${output.versionCode}_${abiName}_${variant.name}.apk"
+            output.outputFileName = "yxSmsF_${build_versions.version_name}_${abiName}_${variant.name}.apk"
 
             // 修改 output-metadata.json 追加编译日期、编译时间、Git Commit ID
             def assembleTaskName = "assemble${variant.name.capitalize()}"

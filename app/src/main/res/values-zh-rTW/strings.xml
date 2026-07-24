@@ -171,10 +171,10 @@
     <string name="resend_toast">正在嘗試通過原發送通道重發</string>
     <string name="rematch_toast">正在重新匹配規則發送</string>
     <string name="upload_recent_sms">上傳最近簡訊</string>
-    <string name="upload_sms">上傳簡訊</string>
-    <string name="upload_recent_sms_tips">確定上傳最近24小時內的簡訊？</string>
-    <string name="upload_recent_sms_toast">已提交最近%1$d條簡訊上傳任務</string>
-    <string name="upload_recent_sms_empty_toast">最近24小時內沒有簡訊記錄</string>
+    <string name="upload_sms">短信上传</string>
+    <string name="upload_recent_sms_tips">請選擇要上傳簡訊的日期</string>
+    <string name="upload_recent_sms_toast">已提交%1$d條簡訊上傳任務</string>
+    <string name="upload_recent_sms_empty_toast">所選日期沒有簡訊記錄</string>
     <string name="details">詳情</string>
     <!--RuleActivity-->
     <string name="delete_rule_title">轉發規則操作確認</string>

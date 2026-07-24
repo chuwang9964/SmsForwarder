@@ -37,6 +37,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import kotlin.math.min
 
@@ -565,7 +567,7 @@ class PhoneUtils private constructor() {
 
         // 获取用户短信列表
         fun getSmsInfoList(
-            type: Int, limit: Int, offset: Int, keyword: String, startTime: Long = 0L
+            type: Int, limit: Int, offset: Int, keyword: String, startTime: Long = 0L, endTime: Long = Long.MAX_VALUE
         ): MutableList<SmsInfo> {
             val smsInfoList: MutableList<SmsInfo> = mutableListOf()
             try {
@@ -582,6 +584,10 @@ class PhoneUtils private constructor() {
                 if (startTime > 0L) {
                     selection += " and date >= ?"
                     selectionArgs.add("$startTime")
+                }
+                if (endTime < Long.MAX_VALUE) {
+                    selection += " and date <= ?"
+                    selectionArgs.add("$endTime")
                 }
                 Log.d(TAG, "selection = $selection")
                 Log.d(TAG, "selectionArgs = $selectionArgs")
@@ -670,6 +676,29 @@ class PhoneUtils private constructor() {
         fun getRecentSmsInfoList(hours: Int, limit: Int = 1000): List<SmsInfo> {
             val time = System.currentTimeMillis() - hours * 3600000L
             return getSmsInfoList(type = 1, limit = limit, offset = 0, keyword = "", startTime = time)
+        }
+
+        /**
+         * 获取指定日期的系统短信（仅接收的短信）
+         *
+         * @param date 指定日期
+         * @param limit 最大条数
+         */
+        fun getSmsInfoListByDate(date: Date, limit: Int = 10000): List<SmsInfo> {
+            val calendar = Calendar.getInstance().apply { time = date }
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startTime = calendar.timeInMillis
+
+            calendar.set(Calendar.HOUR_OF_DAY, 23)
+            calendar.set(Calendar.MINUTE, 59)
+            calendar.set(Calendar.SECOND, 59)
+            calendar.set(Calendar.MILLISECOND, 999)
+            val endTime = calendar.timeInMillis
+
+            return getSmsInfoList(type = 1, limit = limit, offset = 0, keyword = "", startTime = startTime, endTime = endTime)
         }
 
         /**

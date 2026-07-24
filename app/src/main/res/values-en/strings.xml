@@ -170,10 +170,10 @@
     <string name="resend_toast">Attempting to resend over the original sender</string>
     <string name="rematch_toast">Rematching rule sending</string>
     <string name="upload_recent_sms">Upload Recent SMS</string>
-    <string name="upload_sms">Upload SMS</string>
-    <string name="upload_recent_sms_tips">Upload SMS messages from the last 24 hours?</string>
-    <string name="upload_recent_sms_toast">Submitted upload task for %1$d recent messages</string>
-    <string name="upload_recent_sms_empty_toast">No SMS records in the last 24 hours</string>
+    <string name="upload_sms">短信上传</string>
+    <string name="upload_recent_sms_tips">Please select the date to upload SMS</string>
+    <string name="upload_recent_sms_toast">Submitted upload task for %1$d messages</string>
+    <string name="upload_recent_sms_empty_toast">No SMS records for the selected date</string>
     <string name="details">Details</string>
     <!--RuleActivity-->
     <string name="delete_rule_title">Delete confirmation</string>
