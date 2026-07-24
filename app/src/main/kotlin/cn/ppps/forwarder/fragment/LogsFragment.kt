@@ -1,6 +1,7 @@
 package cn.ppps.forwarder.fragment
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
 import android.text.InputType
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -262,20 +263,23 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
     }
 
     /**
-     * 显示日期选择器，默认当前日期
+     * 显示日期选择器，仅显示年月日
      */
     private fun showUploadDatePicker() {
         val calendar = Calendar.getInstance()
-        TimePickerBuilder(context) { date, _ ->
-            uploadSmsByDate(date)
-        }
-            .setType(TimePickerType.DATE)
-            .setTitleText(getString(R.string.upload_recent_sms))
-            .isDialog(true)
-            .setOutSideCancelable(false)
-            .setDate(calendar)
-            .build()
-            .show(false)
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val selectedCalendar = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                uploadSmsByDate(selectedCalendar.time)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     /**
@@ -286,6 +290,16 @@ class LogsFragment : BaseFragment<FragmentLogsBinding?>(), MsgPagingAdapter.OnIt
             try {
                 val recentSms = withContext(Dispatchers.IO) {
                     PhoneUtils.getSmsInfoListByDate(date)
+                }
+                Log.d(
+                    TAG,
+                    "uploadSmsByDate: selectedDate=$date, count=${recentSms.size}"
+                )
+                if (recentSms.isNotEmpty()) {
+                    Log.d(
+                        TAG,
+                        "firstSmsDate=${Date(recentSms.first().date)}, lastSmsDate=${Date(recentSms.last().date)}"
+                    )
                 }
                 if (recentSms.isEmpty()) {
                     XToastUtils.warning(R.string.upload_recent_sms_empty_toast)
